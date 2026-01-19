@@ -3,6 +3,7 @@ package desia.io;
 import java.util.Scanner;
 
 public class Io {
+    // git pull test용 입니다.
     Scanner scan = new Scanner(System.in);
     public int readInt(String prompt,int userChoices) {
 
