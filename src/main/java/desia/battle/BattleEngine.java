@@ -7,7 +7,7 @@ import desia.Game;
 import desia.progress.GameSession;
 import java.util.Random;
 
-/**
+/*
  * 목표: "게임 루프"가 정상 작동하도록 최소 전투 엔진만 제공.
  * 밸런스/스킬/상태이상 등은 나중에 확장.
  */
@@ -21,7 +21,7 @@ public class BattleEngine {
         this.io = io;
     }
 
-    // 전투 시작하는 메소드. 반환값이 boolean 이유는 플레이어의 생사 여부를 true, false로 두었기 때문
+    //전투 시작.
     public boolean fight(GameSession session, Enemy enemyDef) {
         Player p = session.getPlayerBase();
 

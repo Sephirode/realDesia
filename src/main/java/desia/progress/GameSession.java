@@ -93,7 +93,7 @@ public class GameSession {
         return 100 + (level - 1) * 50;
     }
 
-    // 레벨업
+    // 레벨업, 경험치 획득 메소드
     public void gainExp(double amount){
         if(amount<=0) return;
         exp += amount;
@@ -101,13 +101,34 @@ public class GameSession {
         while(exp >= expToNextLevel()){
             exp -= expToNextLevel();
             level +=1;
+            // 레벨업 시 보상으로 회복
+            hp = getMaxHp();
+            mp = getMaxMp();
 
         }
     }
 
+    // 성장한 만큼의 스탯을 계산해서 반환하는 함수
+    private double scale(double base, double growth) { return base + growth*(level - 1);}
 
+    // scale 함수를 이용한 getter 함수들
+    public double getMaxHp() { return scale(playerBase.getMaxHp(), playerBase.getGrowthMaxHp());}
+    public double getMaxMp() { return scale(playerBase.getMaxMp(), playerBase.getGrowthMaxMp());}
+    public double getAtk() { return scale(playerBase.getAtk(), playerBase.getGrowthAtk()); }
+    public double getMagic() { return scale(playerBase.getMagic(), playerBase.getGrowthMagic()); }
+    public double getDef() { return scale(playerBase.getDef(), playerBase.getGrowthDef()); }
+    public double getMdef() { return scale(playerBase.getMdef(), playerBase.getGrowthMdef()); }
+    public double getSpd() { return scale(playerBase.getSpd(), playerBase.getGrowthSpd()); }
+
+    // 플레이어의 현재 체력, 마나를 리턴하는 getter 함수
     public double getHp() { return hp; }
     public double getMp() { return mp; }
+
+    /* 체력, 마나 범위를 안전하게 고정시키는 함수.
+     * 값이 최대를 넘어가는 경우, 최댓값으로 잘라냄.
+     * 그 후 값이 0을 넘어가는 경우, 현재 값으로 잘라냄.
+     * 결과적으로 [0<=현재 값<=최댓값] 완성.
+     */
     public void setHp(double hp) { this.hp = Math.max(0, Math.min(playerBase.getMaxHp(), hp)); }
     public void setMp(double mp) { this.mp = Math.max(0, Math.min(playerBase.getMaxMp(), mp)); }
 

@@ -87,6 +87,7 @@ public class Game {
     }
 
     public void newGame() {
+        // test commit용 입니다.
         final List<Player> playables;
         try {
             playables = loader.loadPlayables();
