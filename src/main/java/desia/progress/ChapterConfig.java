@@ -1,0 +1,25 @@
+package desia.progress;
+
+import lombok.*;
+
+import java.util.List;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Getter
+@Setter
+@ToString
+public class ChapterConfig {
+    private int id;
+    private String name;
+
+    // 잡몹 풀(이 챕터에서 act 1~11에 랜덤 등장)
+    private List<String> enemyPool;
+
+    // act 12 보스
+    private String boss;
+
+    // 스토리 키(StoryRepository에서 키 -> 문구로 매핑)
+    private List<String> storyKeys;
+}
