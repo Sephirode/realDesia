@@ -20,6 +20,7 @@ public class ChapterConfig {
     // act 12 보스
     private String boss;
 
+    // 여기서는 객체 리스트 선언만 해 둠. 초기화는 되어있지 않다.
     // 스토리 키(StoryRepository에서 키 -> 문구로 매핑)
     private List<String> storyKeys;
 }

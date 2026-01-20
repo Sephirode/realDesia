@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.Map;
 
-/**
+/*
  * story.json: { "key": "문구...", ... }
  * 개발자는 story.json만 수정해서 스토리/이벤트 문구를 바꿀 수 있음.
  */

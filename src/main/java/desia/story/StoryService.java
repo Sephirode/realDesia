@@ -18,9 +18,5 @@ public class StoryService {
         gm.clearConsole();
         gm.printHeading(repo.get(key), 1);
         io.anythingToContinue();
-
-        /*System.out.println();
-        System.out.println(repo.get(key));
-        System.out.println();*/
     }
 }

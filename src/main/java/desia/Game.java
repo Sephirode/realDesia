@@ -86,15 +86,20 @@ public class Game {
         }
     }
 
+    // 새 게임 시작하는 메소드.
+    // ★★★★★로드된 데이터 -> 세션으로의 이동 코드는 여기에 있다.★★★★★
     public void newGame() {
         // test commit용 입니다.
         final List<Player> playables;
         try {
+            // DataLoad 클래스의 loadPlayables함수가 리턴한 playables 객체 리스트를, 이곳에 있는 객체 리스트에 배당해줌.
             playables = loader.loadPlayables();
         } catch (Exception e) {
             System.out.println("플레이어블 로딩 실패: " + e.getMessage());
             return;
         }
+        // 정상적으로 로딩됐는지 확인
+        // System.out.println(playables.get(3));
 
         int selectedIndex = selectPlayable(playables); // -1이면 뒤로가기
         if (selectedIndex == -1) return;
@@ -103,7 +108,7 @@ public class Game {
 
         // 닉네임 입력(직업classes와 분리)
         String nickname = askPlayerNickname();
-        // 세션 생성
+        // ★★★★★세션 생성. 여기가 바로 DataLoader 클래스에서 로드한 json 데이터를 GameSesseion 클래스로 넘겨주는 구간이다.
         GameSession session;
         try {
             session = GameSession.newSession(chosen, loader.loadEnemies(), loader.loadConsumables(), chapterRepo, nickname);
@@ -114,17 +119,17 @@ public class Game {
 
         // 시작 스토리(개발자가 story.json에서 수정)
         storyService.printStory("game.start");
-        io.anythingToContinue();
 
         // 캠페인 실행(챕터/액트/상점/스토리/전투)
+        /* 이 코드는 원래 다음 두 줄의 코드를 압축한 것이다.
+         * CampaignEngine engine = new CampaignEngine(io, storyService);
+         * engine.run(session);
+         * 즉, 생성자 호출과 객체 생성을 한꺼번에 하고(new CampaignEngine(io, storyService)),
+         * 실행(.run())까지 동시에 한 것이다. */
         new CampaignEngine(io, storyService).run(session);
     }
 
-    private String askPlayerNickname(){
-        System.out.print("플레이어 이름을 정하세요: ");
-        return io.readNonEmptyString(">>>",20);
-    }
-
+    // 플레이어블 캐릭터 선택하는 메소드
     private int selectPlayable(List<Player> playables) {
         while (true) {
             System.out.println("플레이할 캐릭터를 선택하세요.");
@@ -142,29 +147,10 @@ public class Game {
         }
     }
 
-    /*public void newGame(){
-        Io io1 = new Io();
-        try {
-            DataLoader loader = new DataLoader();
-            List<Player> playables = loader.loadPlayables();
-            System.out.println("플레이할 캐릭터를 선택하세요.");
-            new DataLoader().printAllPlayables(playables);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-        System.out.println("(뒤로가기는 5 입력)");
-
-        int input = io1.readInt(">>>",5);
-
-        switch(input){
-            case 1:
-                break;
-            case 2:
-                break;
-        }
-
-
-    }*/
-
+    // 플레이어 이름 정하는 메소드
+    private String askPlayerNickname(){
+        System.out.print("플레이어 이름을 정하세요: ");
+        return io.readNonEmptyString(">>>",20);
+    }
 
 }

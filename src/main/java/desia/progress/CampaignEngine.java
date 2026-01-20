@@ -18,8 +18,7 @@ import java.util.List;
  */
 public class CampaignEngine {
 
-   Game gm = new Game();
-
+    Game gm = new Game();
     private final Io io;
     private final StoryService story;
     private final BattleEngine battle;
@@ -29,11 +28,16 @@ public class CampaignEngine {
     public CampaignEngine(Io io, StoryService story) {
         this.io = io;
         this.story = story;
+        /* battle, shop, inv는 CampaignEngine 클래스에 선언된 필드다(매개변수가 아님).
+         * 생성자에서 new로 객체를 생성해 해당 필드에 대입함으로써,
+         * CampaignEngine이 BattleEngine, ShopService, InventoryService 객체를 소유하게 된다.
+         * 그 결과 CampaignEngine 내부에서 이 객체들의 메서드를 호출할 수 있다. */
         this.battle = new BattleEngine(io);
         this.shop = new ShopService(io);
         this.inv = new InventoryService(io);
     }
 
+    // 게임의 메인 메뉴. 메인 루프이다. session 변수가 현재 상태에 대한 값(챕터 값, )들을 전달해준다.
     public void run(GameSession session) {
         while (!session.isFinalChapterCleared()) {
             ChapterConfig cfg = session.chapterConfig();
@@ -90,13 +94,16 @@ public class CampaignEngine {
         io.anythingToContinue();
     }
 
+    // 현재 챕터와 챕터의 몬스터 풀에 대한 정보를 수신함
     private boolean resolveAct(GameSession session, ChapterConfig cfg) {
         int act = session.getAct();
+        // 마지막(12번째) 액트 상태일 경우, 최종보스와 전투 시작
         if (act == 12) {
             story.printStory("chapter." + cfg.getId() + ".boss");
             return doBattle(session, cfg.getBoss());
         }
 
+        //
         ActType type = rollActType(session, cfg);
         switch (type) {
             case SHOP:
@@ -116,13 +123,15 @@ public class CampaignEngine {
         }
     }
 
+    // 전투 함수 fight에 정보를 넘겨주는 메소드
     private boolean doBattle(GameSession session, String enemyName) {
         try {
             var enemy = session.enemyDef(enemyName);
             boolean win = battle.fight(session, enemy);
             if (!win) return false;
 
-            // 보상(임시)
+            // 보상(임시 50골드)
+            // TODO: 보상 함수 제작할 것.
             session.addGold(50);
             return true;
         } catch (Exception e) {
@@ -131,13 +140,15 @@ public class CampaignEngine {
         }
     }
 
+    // 액트에서 어떤 이벤트를 불러올지 랜덤으로 정하는 메소드. 보통 전투가 나온다.
     private ActType rollActType(GameSession session, ChapterConfig cfg) {
         // 간단 가중치: 70% 전투, 10% 상점, 20% 스토리
         int r = session.rng().nextInt(100);
         if (r < 70) return ActType.BATTLE;
         if (r < 80) return ActType.SHOP;
-        // 스토리 키가 없으면 전투로 대체
+        // ChapterConfig에서 이미 선언해둔 리스트. 이 리스트(ChapterConfig타입)는 int id, String name 필드를 가짐.
         List<String> keys = cfg.getStoryKeys();
+        // 스토리 키가 없으면 전투
         if (keys == null || keys.isEmpty()) return ActType.BATTLE;
         return ActType.STORY;
     }

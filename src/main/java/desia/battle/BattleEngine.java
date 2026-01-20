@@ -21,7 +21,7 @@ public class BattleEngine {
         this.io = io;
     }
 
-    //전투 시작.
+    //전투 시작. 리턴 타입이 boolean인 이유는 플레이어의 생사 여부를 true, false로 두었기 때문
     public boolean fight(GameSession session, Enemy enemyDef) {
         Player p = session.getPlayerBase();
 
@@ -37,10 +37,12 @@ public class BattleEngine {
         double eDef = enemyDef.getDef() + enemyDef.getGrowthDef() * (eLv - 1);
         // 적 체력 = 배당된 레벨에서의 최대 체력
         double eHp = eMaxHp;
-
+        // 적의 이름과 정보를 출력
         System.out.println("\n[전투] " + enemyDef.getName());
         System.out.println(enemyDef.getDescription());
 
+        // 적의 이름, 레벨, 체력 상태와 플레이어의 스탯을 출력. 그 후 행동 결정 선택지 출력
+        // 플레이어의 체력 또는 적의 체력이 양수가 아닌 경우(사망한 경우) 전투 종료
         while (pHp > 0 && eHp > 0) {
             gm.clearConsole();
             System.out.println("\n/Lv. X "+session.getPlayerName()+"\nHP: " + Math.round(pHp) + "/" + Math.round(p.getMaxHp()) + " MP: " + Math.round(pMp) + "/" + Math.round(p.getMaxMp()));
@@ -58,7 +60,7 @@ public class BattleEngine {
                 double dmg = Math.max(1, p.getAtk() - enemyDef.getDef() * 0.5);
                 eHp -= dmg;
             }
-
+            // 적의 턴이 오기 전에 적이 사망했을 경우, 전투 종료
             if (eHp <= 0) break;
 
             // 적 턴
@@ -67,13 +69,14 @@ public class BattleEngine {
             System.out.println(enemyDef.getName() + "의 공격! " + Math.round(eDmg) + " 피해");
             io.anythingToContinue();
         }
-
+        // 전투 시작 이전에 설정된 체력을, 전투 중 변화한 체력량으로 갱신
         session.setHp(pHp);
-
+        // 어떤 이유로든 전투 종료 시 플레이어의 체력이 0이 된 경우, 게임 오버
         if (pHp <= 0) {
             System.out.println("\n패배... 게임 오버");
             return false;
         }
+        // 아니면 승리. true 값 리턴.
         System.out.println("\n승리!");
         io.anythingToContinue();
         return true;
