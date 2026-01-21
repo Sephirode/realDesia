@@ -1,6 +1,7 @@
 package desia.progress;
 
 import desia.Character.Enemy;
+import desia.Character.EnemyInstance;
 import desia.Character.Player;
 import desia.item.Consumables;
 
@@ -81,6 +82,13 @@ public class GameSession {
         return s;
     }
 
+    // 정의 데이터(enemyDef)와 가변 데이터(spawnEnemy)를 나누는 수단. 이 메소드의 역할이다.
+    public EnemyInstance spawnEnemy(String name) {
+        return EnemyInstance.spawn(enemyDef(name), rng);
+    }
+
+    // 인레이 힌트에서 '0개의 사용 위치'라고 뜬다고 해서 정말로 안 쓰이는 게 아니다.
+    // 물론, private임에도 0개면 필요없는 게 맞다.
     public Random rng() { return rng; }
 
     public Player getPlayerBase() { return playerBase; }
@@ -138,8 +146,8 @@ public class GameSession {
      * 그 후 값이 0을 넘어가는 경우, 현재 값으로 잘라냄.
      * 결과적으로 [0<=현재 값<=최댓값] 완성.
      */
-    public void setHp(double hp) { this.hp = Math.max(0, Math.min(playerBase.getMaxHp(), hp)); }
-    public void setMp(double mp) { this.mp = Math.max(0, Math.min(playerBase.getMaxMp(), mp)); }
+    public void setHp(double hp) { this.hp = Math.max(0, Math.min(getMaxHp(), hp)); }
+    public void setMp(double mp) { this.mp = Math.max(0, Math.min(getMaxMp(), mp)); }
 
     // 챕터, 액트의 getter, setter함수
     public int getChapter() { return chapter; }

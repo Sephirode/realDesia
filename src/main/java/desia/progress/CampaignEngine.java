@@ -126,7 +126,7 @@ public class CampaignEngine {
     // 전투 함수 fight에 정보를 넘겨주는 메소드
     private boolean doBattle(GameSession session, String enemyName) {
         try {
-            var enemy = session.enemyDef(enemyName);
+            var enemy = session.spawnEnemy(enemyName);
             boolean win = battle.fight(session, enemy);
             if (!win) return false;
 

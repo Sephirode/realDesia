@@ -7,7 +7,6 @@ import lombok.ToString;
 @NoArgsConstructor
 @Builder
 @Getter
-@Setter
 @ToString
 
 public class Enemy {
