@@ -1,0 +1,16 @@
+{
+  "version" : 1,
+  "playerClass" : "마검사",
+  "playerName" : "wer",
+  "chapter" : 1,
+  "act" : 3,
+  "level" : 1,
+  "exp" : 70.0,
+  "hp" : 118.0,
+  "mp" : 30.0,
+  "gold" : 255.0,
+  "inventory" : {
+    "'보호막' 스크롤" : 2,
+    "체력 포션" : 3
+  }
+}

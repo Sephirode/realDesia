@@ -87,6 +87,37 @@ public class GameSession {
         return EnemyInstance.spawn(enemyDef(name), rng);
     }
 
+    // 챕터, 액트 스케일을 적용한 적 스폰
+    public EnemyInstance spawnEnemy(String name, boolean isBoss) {
+        ChapterConfig cfg = chapterConfig();
+
+        int minLv = (cfg == null) ? 1 : cfg.getMinLevel();
+        int maxLv = (cfg == null) ? 10 : cfg.getMaxLevel();
+
+        //Chapter.json에 레벨 정보가 없을 시 임시 처리(1~10)
+        if (minLv <= 0 || maxLv <= 0)
+            return EnemyInstance.spawn(enemyDef(name), rng);
+
+        //보스는 해당 챕터의 상한 레벨로 고정 스폰됨
+        if (isBoss)
+            return EnemyInstance.spawn(enemyDef(name), rng, maxLv, maxLv);
+
+        // act 1~11 진행에 따라 min~max 범위 내에서 점진 상승
+        int actIndex = Math.max(1, Math.min(11, getAct()));
+        int range = Math.max(0, maxLv - minLv);
+
+        // 11등분: 액트가 올라갈수록 스폰 구간이 뒤로 밀림
+        int scaledMin = minLv + (actIndex - 1) * range / 11;
+        int scaledMax = minLv + (actIndex) * range / 11;
+        // 최댓값 초과된 수치 보정
+        if (scaledMax < scaledMin)
+            scaledMax = scaledMin;
+        if (scaledMax > maxLv)
+            scaledMax = maxLv;
+
+        return EnemyInstance.spawn(enemyDef(name), rng, scaledMin, scaledMax);
+    }
+
     // 인레이 힌트에서 '0개의 사용 위치'라고 뜬다고 해서 정말로 안 쓰이는 게 아니다.
     // 물론, private임에도 0개면 필요없는 게 맞다.
     public Random rng() { return rng; }
@@ -161,6 +192,47 @@ public class GameSession {
     public void addGold(double delta) {
         this.gold = Math.max(0, this.gold + delta);
     }
+
+    // 세이브/로드用 세터(런타임 로직에서는 사용 지양할 것)
+    public void setGold(double gold) {
+        this.gold = Math.max(0, gold);
+    }
+    public void setExp(double exp) {
+        this.exp = Math.max(0, exp);
+    }
+
+    public void setInventory(Map<String, Integer> inventory) {
+        inv.clear();
+        if (inventory == null) return;
+        for (var e : inventory.entrySet()) {
+            String name = e.getKey();
+            Integer cnt = e.getValue();
+            if (name == null || cnt == null || cnt <= 0) continue;
+            inv.put(name, cnt);
+        }
+    }
+
+    // 세이브 데이터 적용하기
+    public void applySaveData(desia.loader.SaveData data) {
+        if (data == null) return;
+
+        // 진행도
+        setChapter(data.getChapter());
+        setAct(data.getAct());
+
+        // 성장/재화
+        setLevel(data.getLevel());
+        setExp(data.getExp());
+        setGold(data.getGold());
+
+        // 자원(클램프 포함)
+        setHp(data.getHp());
+        setMp(data.getMp());
+
+        // 인벤토리
+        setInventory(data.getInventory());
+    }
+
 
     //
     public Map<String, Integer> inventoryView() { return Collections.unmodifiableMap(inv); }

@@ -1,11 +1,10 @@
 package desia.battle;
 
-import desia.Character.Enemy;
 import desia.Character.EnemyInstance;
-import desia.Character.Player;
-import desia.io.Io;
 import desia.Game;
+import desia.io.Io;
 import desia.progress.GameSession;
+
 import java.util.Random;
 
 /*
@@ -23,69 +22,151 @@ public class BattleEngine {
     }
 
     //전투 시작. 리턴 타입이 boolean인 이유는 플레이어의 생사 여부를 true, false로 두었기 때문
-    public boolean fight(GameSession session, EnemyInstance enemy) {
-        Player p = session.getPlayerBase();
+    public BattleOutcome fight(GameSession session, EnemyInstance enemy) {
 
-        // 플레이어 현재 체력, 현재 마나
-        double pHp = session.getHp();
-        double pMp = session.getMp();
-        // 적 레벨 (enemy Level = eLv)
-        int eLv = (random.nextInt(10)+1);
-
-        /* 본래 [ 성장 적용: 레벨 1이면 base 스탯 그대로, 레벨이 오를수록 growth * (레벨-1) ]
-         * -> double eDef = enemy.getDef() + enemy.getGrowthDef() * (eLv - 1); 같은 형태였으나,
-         * EnemyInstance 클래스에서 scale 함수를 만들어 대체. getter 자체에 내장되어 있기 때문에
-         * 여기서(BattleEngine) 복잡한 계산을 할 필요가 없다. */
-        double eMaxHp = enemy.getMaxHp();
-        double eAtk = enemy.getAtk();
-        double eDef = enemy.getDef();
-        // 적 체력 = 배당된 레벨에서의 최대 체력
-        double eHp = eMaxHp;
-        // 적의 이름과 정보를 출력
         System.out.println("\n[전투] " + enemy.getName());
         System.out.println(enemy.getDescription());
 
-        // 적의 이름, 레벨, 체력 상태와 플레이어의 스탯을 출력. 그 후 행동 결정 선택지 출력
-        // 플레이어의 체력 또는 적의 체력이 양수가 아닌 경우(사망한 경우) 전투 종료
-        while (pHp > 0 && eHp > 0) {
+        while (session.getHp() > 0 && enemy.getHp() > 0) {
+
+            boolean playerFirst = (session.getSpd() >= enemy.getSpd());
+
             gm.clearConsole();
-            //플레이어 상태 출력
-            System.out.println("\n/Lv. X "+session.getPlayerName()+"\nHP: " + Math.round(pHp) + "/" + Math.round(p.getMaxHp()) + " MP: " + Math.round(pMp) + "/" + Math.round(p.getMaxMp()));
-            // 구분선 및 적 상태 출력
+            System.out.println("\n/Lv. " + session.getLevel() + " " + session.getPlayerName()
+                    + "\nHP: " + Math.round(session.getHp()) + "/" + Math.round(session.getMaxHp())
+                    + " MP: " + Math.round(session.getMp()) + "/" + Math.round(session.getMaxMp()));
+
             gm.printSeparator(30);
-            System.out.println("Lv. " + eLv + " " + enemy.getName()+"\nHP: " + Math.round(eHp) + "/" + Math.round(eMaxHp));
-            System.out.println("\n1. 공격  2. 아이템(미구현)  3. 도망(미구현)");
-            int cmd = io.readInt(">>>", 3);
+            System.out.println("Lv. " + enemy.getLevel() + " " + enemy.getName()
+                    + "\nHP: " + Math.round(enemy.getHp()) + "/" + Math.round(enemy.getMaxHp()));
 
-            // 플레이어 턴: 지금은 기본공격만
-            if (cmd == 1) {
-                double dmg = Math.max(1, p.getAtk() - enemy.getDef() * 0.5);
-                eHp -= dmg;
-                System.out.println("플레이어의 공격! " + Math.round(dmg) + " 피해");
+            if (playerFirst) {
+                TurnResult r = playerTurn(session, enemy);
+                if (r == TurnResult.NO_TURN) { io.anythingToContinue(); continue; }
+                if (r == TurnResult.ESCAPE) return BattleOutcome.ESCAPE;
+                if (enemy.getHp() <= 0) break;
+
+                enemyTurn(session, enemy);
             } else {
-                System.out.println("아직 미구현. 이번 턴은 공격으로 대체됨.");
-                double dmg = Math.max(1, p.getAtk() - enemy.getDef() * 0.5);
-                eHp -= dmg;
-            }
-            // 적의 턴이 오기 전에 적이 사망했을 경우, 전투 종료
-            if (eHp <= 0) break;
+                enemyTurn(session, enemy);
+                if (session.getHp() <= 0) break;
 
-            // 적 턴
-            double eDmg = Math.max(1, enemy.getAtk() - p.getDef() * 0.5);
-            pHp -= eDmg;
-            System.out.println(enemy.getName() + "의 공격! " + Math.round(eDmg) + " 피해");
+                TurnResult r = playerTurn(session, enemy);
+                if (r == TurnResult.NO_TURN) { io.anythingToContinue(); continue; }
+                if (r == TurnResult.ESCAPE) return BattleOutcome.ESCAPE;
+            }
+
             io.anythingToContinue();
         }
-        // 전투 시작 이전에 설정된 체력을, 전투 중 변화한 체력량으로 갱신
-        session.setHp(pHp);
-        // 어떤 이유로든 전투 종료 시 플레이어의 체력이 0이 된 경우, 게임 오버
-        if (pHp <= 0) {
+
+        if (session.getHp() <= 0) {
             System.out.println("\n패배... 게임 오버");
-            return false;
+            io.anythingToContinue();
+            return BattleOutcome.LOSE;
         }
-        // 아니면 승리. true 값 리턴.
+
         System.out.println("\n승리!");
         io.anythingToContinue();
-        return true;
+        return BattleOutcome.WIN;
+    }
+
+
+    // 이하 3개는 헬퍼 메소드
+    // 플레이어 턴
+    private enum TurnResult { NO_TURN, TURN_SPENT, ESCAPE }
+
+    private TurnResult playerTurn(GameSession session, EnemyInstance enemy) {
+
+        System.out.println("\n1. 기본 공격  2. 스킬  3. 아이템(미구현)  4. 도망");
+        int cmd = io.readInt(">>>", 4);
+
+        switch (cmd) {
+            case 1 -> {
+                double dmg = Math.max(1, session.getAtk() - enemy.getDef() * 0.5);
+                enemy.damage(dmg);
+                System.out.println("플레이어의 공격! " + Math.round(dmg) + " 피해");
+                return TurnResult.TURN_SPENT;
+            }
+            case 2 -> {
+                final double cost = 5;
+                if (session.getMp() < cost) {
+                    System.out.println("\nMP가 부족하다!");
+                    return TurnResult.NO_TURN;
+                }
+                session.setMp(session.getMp() - cost);
+
+                double dmg = Math.max(1, session.getMagic() - enemy.getMdef() * 0.5);
+                enemy.damage(dmg);
+
+                System.out.println("\n(skillname)! " + Math.round(dmg) + " 피해");
+                return TurnResult.TURN_SPENT;
+            }
+            case 3 -> {
+                System.out.println("아이템 기능 미구현.");
+                return TurnResult.NO_TURN;
+            }
+            case 4 -> {
+                // 도망 시도는 "턴 소모"
+                boolean ok = tryEscape(session, enemy);
+                if (ok) {
+                    System.out.println("\n도망 성공!");
+                    return TurnResult.ESCAPE;
+                } else {
+                    System.out.println("\n도망 실패!");
+                    return TurnResult.TURN_SPENT;
+                }
+            }
+            default -> {
+                return TurnResult.NO_TURN;
+            }
+        }
+    }
+
+
+    // 도주 확률 공식 메소드
+    private boolean tryEscape(GameSession session, EnemyInstance enemy) {
+
+        // 속도 차이 1당 2%
+        double escapeChance = (session.getSpd() - enemy.getSpd()) * 2;
+        if (escapeChance <= 0)
+            escapeChance = 0;
+
+        int roll = random.nextInt(100) + 1; // 1~100
+
+        return roll <= escapeChance;
+    }
+
+
+    // 적 턴
+    private void enemyTurn(GameSession session, EnemyInstance enemy) {
+
+        // 적도 기본/스킬만 있다고 치자(임시)
+        // 적 스킬 사용 여부는 "적 MP"로만 내부 판단(표시는 절대 하지 않음)
+        boolean canSkill = enemy.getMp() >= 5;
+        boolean useSkill = canSkill && random.nextInt(100) < 40; // 40%
+
+        double dmg;
+
+        if (useSkill) {
+            enemy.setMp(enemy.getMp() - 5);
+            dmg = Math.max(1, enemy.getMagic() - session.getMdef() * 0.5);
+            System.out.println("\n" + enemy.getName() + "의 스킬 공격!");
+        } else {
+            dmg = Math.max(1, enemy.getAtk() - session.getDef() * 0.5);
+            System.out.println("\n" + enemy.getName() + "의 공격!");
+        }
+
+        session.setHp(session.getHp() - dmg);
+        System.out.println(Math.round(dmg) + " 피해를 입었다.");
+    }
+
+
+    private double sessionClampHp(GameSession session, double pHp) {
+        session.setHp(pHp);
+        return session.getHp();
+    }
+    private double sessionClampMp(GameSession session, double pMp) {
+        session.setMp(pMp);
+        return session.getMp();
     }
 }

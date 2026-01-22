@@ -14,6 +14,10 @@ public class ChapterConfig {
     private int id;
     private String name;
 
+    // 챕터 적 레벨 스케일
+    private int minLevel;
+    private int maxLevel;
+
     // 잡몹풀(이 챕터에서 act 1~11에 랜덤 등장)
     private List<String> enemyPool;
 

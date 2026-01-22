@@ -1,7 +1,12 @@
 package desia.loader;
 
+import desia.io.Io;
+import desia.progress.ChapterRepository;
+import desia.progress.GameSession;
+
 public class GameLoad {
-    public void gameLoad(){
-        System.out.println("준비 중입니다.");
+    public GameSession gameLoad(Io io, DataLoader loader, ChapterRepository chapterRepo) {
+        SaveService save = new SaveService(io);
+        return save.load(loader, chapterRepo);
     }
 }

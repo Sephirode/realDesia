@@ -14,6 +14,7 @@ public class EnemyInstance {
 
     private double hp;
     private double mp;
+    private boolean escaped = false;
 
     public EnemyInstance(Enemy def, int level){
         this.def = Objects.requireNonNull(def, "def");
@@ -29,6 +30,34 @@ public class EnemyInstance {
         return new EnemyInstance(def, lv);
     }
 
+    // 레벨 범위 스폰: min~max
+    public static EnemyInstance spawn(Enemy def, Random rng, int minLevel, int maxLevel) {
+        int min = Math.max(1, minLevel);
+        int max = Math.max(1, maxLevel);
+        if (max < min) {
+            int t = min;
+            min = max;
+            max = t;
+        }
+
+        int lv;
+        if (rng == null)
+            lv = min;
+        else
+            lv = rng.nextInt(max - min +1) + min;
+
+        return new EnemyInstance(def, lv);
+    }
+
+    public void forceEscape() {
+        this.escaped = true;
+    }
+
+    public boolean hasEscaped() {
+        return escaped;
+    }
+
+
     // getter함수. Enemy 객체의 이름, 설명, 레벨을 리턴한다.
     public String getName() { return def.getName(); }
     public String getDescription() { return def.getDescription(); }
@@ -38,18 +67,22 @@ public class EnemyInstance {
         return base + growth * (level - 1);
     }
 
-    // getter함수. 이쪽은 최대 체력, 최대 마나, 공격력, 방어력 리턴.
-    // todo: 나머지 스탯들도 추가할 것
+    // getter함수. 레벨에 따른 스탯들을 리턴.
     public double getMaxHp() { return scale(def.getMaxHp(), def.getGrowthMaxHp()); }
     public double getMaxMp() { return scale(def.getMaxMp(), def.getGrowthMaxMp()); }
     public double getAtk()   { return scale(def.getAtk(), def.getGrowthAtk()); }
     public double getDef(){ return scale(def.getDef(), def.getGrowthDef()); }
+    public double getMagic()   { return scale(def.getMagic(), def.getGrowthMagic()); }
+    public double getMdef(){ return scale(def.getMdef(), def.getGrowthMdef()); }
+    public double getSpd(){ return scale(def.getSpd(), def.getGrowthSpd()); }
 
     // 현재 체력 리턴하는 getter함수.
     public double getHp() { return hp; }
-    // 체력이 최댓값을 초과하거나 음수가 되는 것을 방지하는 setter함수.
-    // 1단계: min 함수로 최대 체력을 넘지 않도록 보정한다. 2단계: max 함수로 체력이 음수가 되는 것을 방지한다.
+    public double getMp() { return mp; }
+    /* 체력, 마나가 최댓값을 초과하거나 음수가 되는 것을 방지하는 setter함수.
+     * 1단계: min 함수로 최댓값을 넘지 않도록 보정한다. 2단계: max 함수로 수치가 음수가 되는 것을 방지한다. */
     public void setHp(double hp) { this.hp = Math.max(0, Math.min(getMaxHp(), hp)); }
+    public void setMp(double mp) { this.mp = Math.max(0, Math.min(getMaxMp(), mp)); }
     // 받은 대미지 계산하는 함수. 받은 대미지 amount가 0보다 작으면 아무 변화가 없다.
     public void damage(double amount) { if (amount > 0) setHp(hp - amount); }
 

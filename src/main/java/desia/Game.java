@@ -38,7 +38,13 @@ public class Game {
             switch (input) {
                 case 1 -> newGame();
                 case 2 -> continueGame();
-                case 3 -> gl.gameLoad();
+                case 3 -> {
+                    GameSession loaded = gl.gameLoad(io, loader, chapterRepo);
+                    if (loaded != null){
+                        currentSession = loaded;
+                        new CampaignEngine(io, storyService).run(currentSession);
+                    }
+                }
                 case 4 -> rk.printRanking();
                 case 5 -> { if (io.confirmExit()) return; }
             }

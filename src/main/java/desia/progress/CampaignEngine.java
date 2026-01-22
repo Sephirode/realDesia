@@ -4,6 +4,7 @@ import desia.Game;
 import desia.battle.BattleEngine;
 import desia.inventory.InventoryService;
 import desia.io.Io;
+import desia.loader.SaveService;
 import desia.shop.ShopService;
 import desia.story.StoryService;
 
@@ -24,6 +25,7 @@ public class CampaignEngine {
     private final BattleEngine battle;
     private final ShopService shop;
     private final InventoryService inv;
+    private final SaveService save;
 
     public CampaignEngine(Io io, StoryService story) {
         this.io = io;
@@ -35,6 +37,7 @@ public class CampaignEngine {
         this.battle = new BattleEngine(io);
         this.shop = new ShopService(io);
         this.inv = new InventoryService(io);
+        this.save = new SaveService(io);
     }
 
     // 게임의 메인 메뉴. 메인 루프이다. session 변수가 현재 상태에 대한 값(챕터 값, )들을 전달해준다.
@@ -44,8 +47,8 @@ public class CampaignEngine {
             printChapterActHeader(session, cfg);
 
             // 허브 메뉴(전투 밖)
-            System.out.println("1. 진행한다  2. 스테이터스  3. 인벤토리  4. 메인메뉴로");
-            int cmd = io.readInt(">>>", 4);
+            System.out.println("1. 진행한다\t2. 스테이터스\t3. 인벤토리3\t4. 저장\t5. 메인메뉴로");
+            int cmd = io.readInt(">>>", 5);
             if (cmd == 2) {
                 printStatus(session);
                 continue;
@@ -55,6 +58,10 @@ public class CampaignEngine {
                 continue;
             }
             if (cmd == 4) {
+                save.saveWithMenu(session);
+                continue;
+            }
+            if (cmd == 5){
                 return;
             }
 
@@ -76,9 +83,9 @@ public class CampaignEngine {
         System.out.println("ACT " + session.getAct() + "/12");
         gm.printSeparatorX(30);
 
-        System.out.println(session.getPlayerName()+"\tLv. "+p.getLevel());
-        System.out.println("HP: " + Math.round(session.getHp()) + "/" + Math.round(p.getMaxHp()));
-        System.out.println("MP: " + Math.round(session.getMp()) + "/" + Math.round(p.getMaxMp()));
+        System.out.println(session.getPlayerName()+"\tLv. "+session.getLevel());
+        System.out.println("HP: " + Math.round(session.getHp()) + "/" + Math.round(session.getMaxHp()));
+        System.out.println("MP: " + Math.round(session.getMp()) + "/" + Math.round(session.getMaxMp()));
     }
 
     private void printStatus(GameSession session) {
@@ -86,10 +93,14 @@ public class CampaignEngine {
         gm.clearConsole();
         gm.printHeading("[스테이터스]",1);
         System.out.println("이름: " + session.getPlayerName());
-        System.out.println("레벨: " + p.getLevel());
-        System.out.println("HP: " + Math.round(session.getHp()) + "/" + Math.round(p.getMaxHp()));
-        System.out.println("MP: " + Math.round(session.getMp()) + "/" + Math.round(p.getMaxMp()));
-        System.out.println("ATK: " + p.getAtk() + "  DEF: " + p.getDef());
+        System.out.println("직업: " + p.getClasses());
+        System.out.println("레벨: " + session.getLevel());
+        System.out.println("Exp(경험치): " + session.getExp() + "/" + Math.round(session.expToNextLevel()));
+        System.out.println("HP: " + Math.round(session.getHp()) + "/" + Math.round(session.getMaxHp()));
+        System.out.println("MP: " + Math.round(session.getMp()) + "/" + Math.round(session.getMaxMp()));
+        System.out.println("공격력: " + session.getAtk() + "  방어력: " + session.getDef());
+        System.out.println("주문력: " + session.getMagic() + "  마법 저항력: " + session.getMdef());
+        System.out.println("스피드: " + session.getSpd());
         System.out.println("소지금: " + Math.round(session.getGold())+"골드");
         io.anythingToContinue();
     }
@@ -100,7 +111,7 @@ public class CampaignEngine {
         // 마지막(12번째) 액트 상태일 경우, 최종보스와 전투 시작
         if (act == 12) {
             story.printStory("chapter." + cfg.getId() + ".boss");
-            return doBattle(session, cfg.getBoss());
+            return doBattle(session, cfg.getBoss(), true);
         }
 
         //
@@ -119,26 +130,55 @@ public class CampaignEngine {
             default:
                 story.printStory("chapter." + cfg.getId() + ".battle");
                 String enemyName = rollEnemy(session, cfg);
-                return doBattle(session, enemyName);
+                return doBattle(session, enemyName, false);
         }
     }
 
     // 전투 함수 fight에 정보를 넘겨주는 메소드
-    private boolean doBattle(GameSession session, String enemyName) {
+    private boolean doBattle(GameSession session, String enemyName, boolean isBoss) {
         try {
-            var enemy = session.spawnEnemy(enemyName);
-            boolean win = battle.fight(session, enemy);
-            if (!win) return false;
+            var enemy = session.spawnEnemy(enemyName, isBoss);
+            var outcome = battle.fight(session, enemy);
 
-            // 보상(임시 50골드)
-            // TODO: 보상 함수 제작할 것.
-            session.addGold(50);
+            // 1) 패배
+            if (outcome == desia.battle.BattleOutcome.LOSE) {
+                return false;
+            }
+
+            // 2) 도망
+            if (outcome == desia.battle.BattleOutcome.ESCAPE) {
+                return true; // 진행은 계속, 보상 없음
+            }
+
+            // 3) 승리 (WIN)
+            int enemyLv = enemy.getLevel();
+
+            double expGain = 20 + enemyLv * 10;
+            double goldGain = 20 + enemyLv * 5;
+
+            if (isBoss) {
+                expGain *= 2.0;
+                goldGain *= 2.0;
+            }
+
+            session.gainExp(expGain);
+            session.addGold(goldGain);
+
+            System.out.println("\n획득 EXP: " + Math.round(expGain)
+                    + " / 획득 골드: " + Math.round(goldGain));
+            System.out.println("현재 레벨: " + session.getLevel()
+                    + " (다음 레벨까지 EXP: "
+                    + Math.round(session.expToNextLevel() - session.getExp()) + ")");
+            io.anythingToContinue();
+
             return true;
+
         } catch (Exception e) {
             System.out.println("전투 시작 실패: " + e.getMessage());
-            return true; // 루프를 막지 않게 일단 진행
+            return true; // 루프를 막지 않게 진행
         }
     }
+
 
     // 액트에서 어떤 이벤트를 불러올지 랜덤으로 정하는 메소드. 보통 전투가 나온다.
     private ActType rollActType(GameSession session, ChapterConfig cfg) {
