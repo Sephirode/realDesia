@@ -1,9 +1,9 @@
 package desia.shop;
 
-import desia.Game;
 import desia.io.Io;
 import desia.item.Consumables;
 import desia.progress.GameSession;
+import desia.ui.ConsoleUi;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
  */
 public class ShopService {
 
-    Game gm = new Game();
     private final Io io;
 
     public ShopService(Io io) {
@@ -28,7 +27,7 @@ public class ShopService {
         List<Consumables> stock = rollStock(session, 6);
 
         while (true) {
-            gm.clearConsole();
+            ConsoleUi.clearConsole();
             System.out.println("\n[상점] 보유 골드: " + Math.round(session.getGold())+"골드");
             System.out.println("1. 구매  2. 판매  3. 나가기");
             int cmd = io.readInt(">>>", 3);
@@ -49,9 +48,10 @@ public class ShopService {
         return all.stream().limit(size).collect(Collectors.toList());
     }
 
+    // 상점에서 상품 목록을 출력하고 구매를 담당하는 메소드
     private void buyMenu(GameSession session, List<Consumables> stock) {
         while (true) {
-            gm.clearConsole();
+            ConsoleUi.clearConsole();
             System.out.println("\n[상점] 보유 골드: " + Math.round(session.getGold())+"골드");
             System.out.println("\n[구매] (0 입력: 뒤로)");
             for (int i = 0; i < stock.size(); i++) {
@@ -60,7 +60,7 @@ public class ShopService {
             }
             System.out.println("구매할 번호를 고르세요.");
 
-            int input = readIntAllowZero(stock.size());
+            int input = io.readIntAllowZero(">>>", stock.size());
             if (input == 0) return;
 
             Consumables chosen = stock.get(input - 1);
@@ -79,7 +79,7 @@ public class ShopService {
 
     private void sellMenu(GameSession session) {
         while (true) {
-            gm.clearConsole();
+            ConsoleUi.clearConsole();
             var inv = session.inventoryView();
             if (inv.isEmpty()) {
                 System.out.println("\n[판매] 인벤토리가 비었습니다.");
@@ -87,7 +87,7 @@ public class ShopService {
                 return;
             }
 
-            gm.clearConsole();
+            ConsoleUi.clearConsole();
             System.out.println("\n[상점] 보유 골드: " + Math.round(session.getGold())+"골드");
             System.out.println("\n[판매] (0 입력: 뒤로)");
             List<String> names = new ArrayList<>(inv.keySet());
@@ -99,7 +99,7 @@ public class ShopService {
             }
             System.out.println("판매할 아이템 번호를 고르세요.");
 
-            int input = readIntAllowZero(names.size());
+            int input = io.readIntAllowZero(">>>", names.size());
             if (input == 0) return;
 
             String name = names.get(input - 1);
@@ -119,16 +119,5 @@ public class ShopService {
         Consumables def = session.consumableDef(itemName);
         double base = (def == null) ? 10 : def.getPrice();
         return Math.max(1, Math.floor(base * 0.5));
-    }
-
-    private int readIntAllowZero(int max) {
-        while (true) {
-            try {
-                int v = Integer.parseInt(new java.util.Scanner(System.in).next());
-                if (v >= 0 && v <= max) return v;
-            } catch (Exception ignored) {}
-            System.out.println("잘못된 입력");
-            System.out.println(">>>");
-        }
     }
 }

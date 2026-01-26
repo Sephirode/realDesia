@@ -1,27 +1,20 @@
 package desia.battle;
 
 import desia.Character.EnemyInstance;
-import desia.Game;
 import desia.io.Io;
 import desia.progress.GameSession;
+import desia.ui.ConsoleUi;
 
 import java.util.Random;
 
-/*
- * 목표: "게임 루프"가 정상 작동하도록 최소 전투 엔진만 제공.
- * 밸런스/스킬/상태이상 등은 나중에 확장.
- */
 public class BattleEngine {
-
-    Game gm = new Game();
     private final Io io;
-    Random random = new Random();
+    private final Random random = new Random();
 
     public BattleEngine(Io io) {
         this.io = io;
     }
 
-    //전투 시작. 리턴 타입이 boolean인 이유는 플레이어의 생사 여부를 true, false로 두었기 때문
     public BattleOutcome fight(GameSession session, EnemyInstance enemy) {
 
         System.out.println("\n[전투] " + enemy.getName());
@@ -31,12 +24,12 @@ public class BattleEngine {
 
             boolean playerFirst = (session.getSpd() >= enemy.getSpd());
 
-            gm.clearConsole();
+            ConsoleUi.clearConsole();
             System.out.println("\n/Lv. " + session.getLevel() + " " + session.getPlayerName()
                     + "\nHP: " + Math.round(session.getHp()) + "/" + Math.round(session.getMaxHp())
                     + " MP: " + Math.round(session.getMp()) + "/" + Math.round(session.getMaxMp()));
 
-            gm.printSeparator(30);
+            ConsoleUi.printSeparator(30);
             System.out.println("Lv. " + enemy.getLevel() + " " + enemy.getName()
                     + "\nHP: " + Math.round(enemy.getHp()) + "/" + Math.round(enemy.getMaxHp()));
 
@@ -158,15 +151,5 @@ public class BattleEngine {
 
         session.setHp(session.getHp() - dmg);
         System.out.println(Math.round(dmg) + " 피해를 입었다.");
-    }
-
-
-    private double sessionClampHp(GameSession session, double pHp) {
-        session.setHp(pHp);
-        return session.getHp();
-    }
-    private double sessionClampMp(GameSession session, double pMp) {
-        session.setMp(pMp);
-        return session.getMp();
     }
 }

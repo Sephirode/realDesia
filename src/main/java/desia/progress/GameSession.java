@@ -82,9 +82,8 @@ public class GameSession {
         return s;
     }
 
-    // 정의 데이터(enemyDef)와 가변 데이터(spawnEnemy)를 나누는 수단. 이 메소드의 역할이다.
     public EnemyInstance spawnEnemy(String name) {
-        return EnemyInstance.spawn(enemyDef(name), rng);
+        return spawnEnemy(name, false);
     }
 
     // 챕터, 액트 스케일을 적용한 적 스폰
@@ -146,12 +145,20 @@ public class GameSession {
         if(amount<=0) return;
         exp += amount;
 
-        while(exp >= expToNextLevel()){
-            exp -= expToNextLevel();
+        while(true) {
+            int need = expToNextLevel();
+            // 만약에, 버그로 인해 다음 레벨의 요구 경험치량이 양수가 아닌 경우, 예외 던지기
+            if (need <= 0) throw new IllegalStateException("expToNextLevel must be > 0");
+
+            if (exp < need)
+                break;
+            exp -= need;
             level +=1;
-            // 레벨업 시 보상으로 회복
-            hp = getMaxHp();
-            mp = getMaxMp();
+            // 레벨업 시 보상으로 최대 체력, 마나의 절반만큼 회복
+            hp += getMaxHp()*0.5;
+            mp += getMaxMp()*0.5;
+            setHp(hp);
+            setMp(mp);
 
         }
     }
@@ -183,8 +190,14 @@ public class GameSession {
     // 챕터, 액트의 getter, setter함수
     public int getChapter() { return chapter; }
     public int getAct() { return act; }
-    public void setChapter(int chapter) { this.chapter = chapter; }
-    public void setAct(int act) { this.act = act; }
+    public void setChapter(int chapter) {
+        // 챕터는 최소 1이어야 한다.
+        this.chapter = Math.max(1, chapter);
+    }
+    public void setAct(int act) {
+        // 액트는 최대 12이어야 한다.
+        this.act = Math.max(1, Math.min(12, act));
+    }
 
     // 소지금 액수를 불러오는 getter함수 & 골드 수입을 적용하는 함수
     public double getGold() { return gold; }
@@ -206,8 +219,10 @@ public class GameSession {
         if (inventory == null) return;
         for (var e : inventory.entrySet()) {
             String name = e.getKey();
+            // int는 스택이다. Integer는 힙에 있는 객체이다. cnt가 e.getValue()값 자체가 아니라, 그 값을 들고 있는 객체이다.
             Integer cnt = e.getValue();
-            if (name == null || cnt == null || cnt <= 0) continue;
+            if (name == null || cnt == null || cnt <= 0)
+                continue;
             inv.put(name, cnt);
         }
     }
@@ -235,7 +250,8 @@ public class GameSession {
 
 
     //
-    public Map<String, Integer> inventoryView() { return Collections.unmodifiableMap(inv); }
+    public Map<String, Integer> inventoryView() {
+        return Collections.unmodifiableMap(inv); }
     public void addItem(String name, int count) {
         if (count <= 0) return;
         inv.put(name, inv.getOrDefault(name, 0) + count);

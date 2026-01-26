@@ -1,12 +1,12 @@
 package desia.progress;
 
-import desia.Game;
 import desia.battle.BattleEngine;
 import desia.inventory.InventoryService;
 import desia.io.Io;
 import desia.loader.SaveService;
 import desia.shop.ShopService;
 import desia.story.StoryService;
+import desia.ui.ConsoleUi;
 
 import java.util.List;
 
@@ -18,8 +18,6 @@ import java.util.List;
  * - 스토리 문구는 story.json에서 수정 가능
  */
 public class CampaignEngine {
-
-    Game gm = new Game();
     private final Io io;
     private final StoryService story;
     private final BattleEngine battle;
@@ -44,6 +42,10 @@ public class CampaignEngine {
     public void run(GameSession session) {
         while (!session.isFinalChapterCleared()) {
             ChapterConfig cfg = session.chapterConfig();
+            if (cfg == null) {
+                System.out.println("chapters.json 설정이 비정상입니다. chapter=" + session.getChapter());
+                return;
+            }
             printChapterActHeader(session, cfg);
 
             // 허브 메뉴(전투 밖)
@@ -76,12 +78,11 @@ public class CampaignEngine {
     }
 
     private void printChapterActHeader(GameSession session, ChapterConfig cfg) {
-        var p = session.getPlayerBase();
-        gm.clearConsole();
-        gm.printSeparatorX(30);
+        ConsoleUi.clearConsole();
+        ConsoleUi.printSeparatorX(30);
         System.out.println("CHAPTER " + cfg.getId() + " - " + cfg.getName());
         System.out.println("ACT " + session.getAct() + "/12");
-        gm.printSeparatorX(30);
+        ConsoleUi.printSeparatorX(30);
 
         System.out.println(session.getPlayerName()+"\tLv. "+session.getLevel());
         System.out.println("HP: " + Math.round(session.getHp()) + "/" + Math.round(session.getMaxHp()));
@@ -90,8 +91,8 @@ public class CampaignEngine {
 
     private void printStatus(GameSession session) {
         var p = session.getPlayerBase();
-        gm.clearConsole();
-        gm.printHeading("[스테이터스]",1);
+        ConsoleUi.clearConsole();
+        ConsoleUi.printHeading("[스테이터스]",1);
         System.out.println("이름: " + session.getPlayerName());
         System.out.println("직업: " + p.getClasses());
         System.out.println("레벨: " + session.getLevel());

@@ -10,6 +10,7 @@ import desia.progress.CampaignEngine;
 import desia.progress.ChapterRepository;
 import desia.story.StoryRepository;
 import desia.story.StoryService;
+import desia.ui.ConsoleUi;
 
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class Game {
 
     // 진행/스토리
     private final ChapterRepository chapterRepo = new ChapterRepository();
-    private final StoryService storyService = new StoryService(new StoryRepository());
+    private final StoryService storyService = new StoryService(io, new StoryRepository());
 
     // 게임을 종료하기 전까지, 게임 진행상황은 Game 클래스가 들고 있는다.
     private GameSession currentSession = null;
@@ -72,7 +73,8 @@ public class Game {
         }
 
         int selectedIndex = selectPlayable(playables); // -1이면 뒤로가기
-        if (selectedIndex == -1) return;
+        if (selectedIndex == -1)
+            return;
 
         Player chosen = playables.get(selectedIndex);
 
@@ -113,57 +115,43 @@ public class Game {
         while (true) {
             System.out.println("플레이할 캐릭터를 선택하세요.");
             loader.printAllPlayables(playables);
-            System.out.println("(뒤로가기는 5 입력)");
+            int back = playables.size() + 1;
+            System.out.println("(뒤로가기는 " + back + " 입력)");
 
-            int input = io.readInt(">>>", 5);
+            int input = io.readInt(">>>", back);
+            // 뒤로가기(이 함수를 호출한 함수(selectPlayables)에서 리턴값 없음으로 처리됨
+            if (input == back)
+                return -1;
 
-            if (input == 5) return -1;
-
-            int idx = input - 1; // 1 -> 0
-            if (idx >= 0 && idx < playables.size()) return idx;
-
+            int idx = input - 1; // 1 -> 0, 2 -> 1
+            if (idx >= 0 && idx < playables.size())
+                return idx;
+            // 유효한 입력이 아닌 경우
             System.out.println("잘못된 입력");
         }
     }
 
     // 플레이어 이름 정하는 메소드
-    private String askPlayerNickname(){
+    private String askPlayerNickname() {
         System.out.print("플레이어 이름을 정하세요: ");
         return io.readNonEmptyString(">>>",20);
     }
 
-    // 보고 있는 콘솔 화면 정리하기
+    // 콘솔 화면 정리 메소드 가져와서 실행
     public void clearConsole() {
-        for(int i=0; i<50; i++) {
-            System.out.println();
-        }
+        ConsoleUi.clearConsole();
     }
-
-    // 길이가 n인 문단 구분자 만들기 - 2개 버전 (----- / =====)
+    // 문단 구분자 가져와서 실행
     public void printSeparator(int n) {
-        for(int i=0;i<n;i++) {
-            System.out.print("-");
-        }System.out.println();
+        ConsoleUi.printSeparator(n);
     }
     public void printSeparatorX(int n){
-        for(int i=0;i<n;i++) {
-            System.out.print("=");
-        }System.out.println();
+        ConsoleUi.printSeparatorX(n);
     }
 
     // 제목 출력하기
     // 2번은 - 대신 =을 출력하는 굵은 버전.
     public void printHeading(String title, int n) {
-        switch (n){
-            case 1:
-                printSeparator(30);
-                System.out.println(title);
-                printSeparator(30);
-                break;
-            case 2:
-                printSeparatorX(30);
-                System.out.println(title);
-                printSeparatorX(30);
-        }
+        ConsoleUi.printHeading(title, n);
     }
 }
