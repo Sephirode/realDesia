@@ -3,18 +3,25 @@ package desia.Character;
 import java.util.Objects;
 import java.util.Random;
 
+import desia.combat.Combatant;
+import desia.status.StatusContainer;
+
 /* 전투 중에만 존재하는 적 개체.
  * Enemy(def)는 json에서 로딩된, 정의된 원본 데이터이므로 수정 금지.
  * EnemyInstance는 전투에서 HP, 상태이상 등이 변하는 런타임 객체. */
 
-public class EnemyInstance {
+public class EnemyInstance implements Combatant {
 
     private final Enemy def;
     private final int level;
 
     private double hp;
     private double mp;
+    private double shield = 0;
     private boolean escaped = false;
+
+    // 상태이상(전투용). EnemyInstance는 전투마다 새로 생성되므로 기본적으로 비어 있다.
+    private final StatusContainer statuses = new StatusContainer();
 
     public EnemyInstance(Enemy def, int level){
         this.def = Objects.requireNonNull(def, "def");
@@ -57,11 +64,21 @@ public class EnemyInstance {
         return escaped;
     }
 
-
     // getter함수. Enemy 객체의 이름, 설명, 레벨을 리턴한다.
     public String getName() { return def.getName(); }
     public String getDescription() { return def.getDescription(); }
     public int getLevel() { return level; }
+
+    @Override
+    public String getNameForStatus() { return getName(); }
+    @Override
+    public StatusContainer statuses() { return statuses; }
+    @Override
+    public double getShield() { return shield; }
+    @Override
+    public void setShield(double shield) { this.shield = Math.max(0, shield); }
+
+
 
     private double scale(double base, double growth) {
         return base + growth * (level - 1);

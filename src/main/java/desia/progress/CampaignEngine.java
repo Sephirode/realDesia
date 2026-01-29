@@ -49,7 +49,7 @@ public class CampaignEngine {
             printChapterActHeader(session, cfg);
 
             // 허브 메뉴(전투 밖)
-            System.out.println("1. 진행한다\t2. 스테이터스\t3. 인벤토리3\t4. 저장\t5. 메인메뉴로");
+            System.out.println("1. 진행한다  2. 스테이터스  3. 인벤토리  4. 저장  5. 메인메뉴로");
             int cmd = io.readInt(">>>", 5);
             if (cmd == 2) {
                 printStatus(session);
@@ -87,6 +87,7 @@ public class CampaignEngine {
         System.out.println(session.getPlayerName()+"\tLv. "+session.getLevel());
         System.out.println("HP: " + Math.round(session.getHp()) + "/" + Math.round(session.getMaxHp()));
         System.out.println("MP: " + Math.round(session.getMp()) + "/" + Math.round(session.getMaxMp()));
+        System.out.println("SHD: " + Math.round(session.getShield()));
     }
 
     private void printStatus(GameSession session) {
@@ -99,6 +100,7 @@ public class CampaignEngine {
         System.out.println("Exp(경험치): " + session.getExp() + "/" + Math.round(session.expToNextLevel()));
         System.out.println("HP: " + Math.round(session.getHp()) + "/" + Math.round(session.getMaxHp()));
         System.out.println("MP: " + Math.round(session.getMp()) + "/" + Math.round(session.getMaxMp()));
+        System.out.println("SHD: " + Math.round(session.getShield()));
         System.out.println("공격력: " + session.getAtk() + "  방어력: " + session.getDef());
         System.out.println("주문력: " + session.getMagic() + "  마법 저항력: " + session.getMdef());
         System.out.println("스피드: " + session.getSpd());

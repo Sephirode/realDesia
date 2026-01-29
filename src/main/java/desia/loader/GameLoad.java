@@ -5,8 +5,8 @@ import desia.progress.ChapterRepository;
 import desia.progress.GameSession;
 
 public class GameLoad {
-    public GameSession gameLoad(Io io, DataLoader loader, ChapterRepository chapterRepo) {
+    public GameSession gameLoad(Io io, GameData data, ChapterRepository chapterRepo) {
         SaveService save = new SaveService(io);
-        return save.load(loader, chapterRepo);
+        return save.load(data, chapterRepo);
     }
 }

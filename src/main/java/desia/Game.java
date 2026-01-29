@@ -3,6 +3,7 @@ package desia;
 import desia.Character.Player;
 import desia.io.Io;
 import desia.loader.DataLoader;
+import desia.loader.GameData;
 import desia.loader.GameLoad;
 import desia.loader.Ranking;
 import desia.progress.GameSession;
@@ -19,6 +20,8 @@ public class Game {
     // 공용 객체: 한 번만 만들어서 계속 사용
     private final Io io = new Io();
     private final DataLoader loader = new DataLoader();
+    private final GameData data = loader.loadAll();
+
     private final GameLoad gl = new GameLoad();
     private final Ranking rk = new Ranking();
 
@@ -40,7 +43,7 @@ public class Game {
                 case 1 -> newGame();
                 case 2 -> continueGame();
                 case 3 -> {
-                    GameSession loaded = gl.gameLoad(io, loader, chapterRepo);
+                    GameSession loaded = gl.gameLoad(io, data, chapterRepo);
                     if (loaded != null){
                         currentSession = loaded;
                         new CampaignEngine(io, storyService).run(currentSession);
@@ -66,7 +69,7 @@ public class Game {
         final List<Player> playables;
         try {
             // DataLoad 클래스의 loadPlayables함수가 리턴한 playables 객체 리스트를, 이곳에 있는 객체 리스트에 배당해줌.
-            playables = loader.loadPlayables();
+            playables = data.playables();
         } catch (Exception e) {
             System.out.println("플레이어블 로딩 실패: " + e.getMessage());
             return;
@@ -84,7 +87,14 @@ public class Game {
         // ★★★★★세션 생성. 여기가 바로 DataLoader 클래스에서 로드한 json 데이터를 GameSesseion 클래스로 넘겨주는 구간이다.
         GameSession session;
         try {
-            session = GameSession.newSession(chosen, loader.loadEnemies(), loader.loadConsumables(), chapterRepo, nickname);
+            session = GameSession.newSession(
+                    chosen,
+                    data.enemies(),
+                    data.consumables(),
+                    data.skills(),
+                    chapterRepo,
+                    nickname
+            );
         } catch (Exception e) {
             System.out.println("게임 데이터 로딩 실패: " + e.getMessage());
             return;

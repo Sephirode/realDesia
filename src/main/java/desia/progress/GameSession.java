@@ -4,10 +4,13 @@ import desia.Character.Enemy;
 import desia.Character.EnemyInstance;
 import desia.Character.Player;
 import desia.item.Consumables;
+import desia.combat.Combatant;
+import desia.status.StatusContainer;
+import desia.skill.SkillDef;
 
 import java.util.*;
 
-public class GameSession {
+public class GameSession implements Combatant {
 
     // 랜덤함수 사용을 위해 생성
     private final Random rng = new Random();
@@ -20,6 +23,10 @@ public class GameSession {
     // 현재 자원(체력, 마나)
     private double hp;
     private double mp;
+    private double shield = 0;
+
+    // 상태이상(전투 중). 전투 시작 시 초기화
+    private final StatusContainer statuses = new StatusContainer();
 
     // 게임 진행도. 챕터, 액트
     private int chapter = 1;
@@ -33,6 +40,7 @@ public class GameSession {
     // 데이터(정의): 이름으로 조회
     private final Map<String, Enemy> enemyByName;
     private final Map<String, Consumables> consumableByName;
+    private final Map<String, SkillDef> skillByName;
 
     private final ChapterRepository chapterRepo;
 
@@ -42,6 +50,7 @@ public class GameSession {
                         String playerName,
                         Map<String, Enemy> enemyByName,
                         Map<String, Consumables> consumableByName,
+                        Map<String, SkillDef> skillByName,
                         ChapterRepository chapterRepo) {
         this.playerBase = playerBase;
         this.playerName = playerName;
@@ -57,24 +66,20 @@ public class GameSession {
         this.mp = playerBase.getMaxMp();
         this.enemyByName = enemyByName;
         this.consumableByName = consumableByName;
+        this.skillByName = skillByName;
         this.chapterRepo = chapterRepo;
     }
 
     // ★★★★★ 접근하면 안 되는 불변 데이터(원본) 대신, 게임에서 사용할 가변 데이터 세트를(새로운 세션) 준비하는 생성자.
     // Game 클래스에서 이 생성자를 호출, 로드한 데이터를 여기에 집어넣는다.
     public static GameSession newSession(Player chosen,
-                                         List<Enemy> enemies,
-                                         List<Consumables> consumables,
+                                         Map<String, Enemy> enemyByName,
+                                         Map<String, Consumables> consumableByName,
+                                         Map<String, SkillDef> skillByName,
                                          ChapterRepository chapterRepo,
                                          String playerName) {
-        // 적 목록 해시맵 생성. 그 해시맵에 매개변수로 받아온(로드된 데이터. Game클래스-DataLoader클래스 순) 데이터를 배당.
-        Map<String, Enemy> eMap = new HashMap<>();
-        for (Enemy e : enemies) eMap.put(e.getName(), e);
-        // 위와 마찬가지. 소모품 해시맵을 만들고 로드된 데이터를 매개변수로 받아와서 배당.
-        Map<String, Consumables> cMap = new HashMap<>();
-        for (Consumables c : consumables) cMap.put(c.getName(), c);
-        // 이제 준비된 데이터들을 바탕으로 게임 중 실제로 사용할 데이터 세트(세션) 생성.
-        GameSession s = new GameSession(chosen, playerName, eMap, cMap, chapterRepo);
+        // 정의 데이터(Map) 생성은 DataLoader가 담당한다.
+        GameSession s = new GameSession(chosen, playerName, enemyByName, consumableByName, skillByName, chapterRepo);
 
         // 시작 아이템(테스트용)
         s.addItem("'보호막' 스크롤", 2);
@@ -84,6 +89,15 @@ public class GameSession {
 
     public EnemyInstance spawnEnemy(String name) {
         return spawnEnemy(name, false);
+    }
+
+    public SkillDef skillDef(String name) {
+        if (name == null) return null;
+        return skillByName.get(name);
+    }
+
+    public Map<String, SkillDef> skillsView() {
+        return Collections.unmodifiableMap(skillByName);
     }
 
     // 챕터, 액트 스케일을 적용한 적 스폰
@@ -123,6 +137,24 @@ public class GameSession {
 
     public Player getPlayerBase() { return playerBase; }
     public String getPlayerName() { return playerName;}
+
+    @Override
+    public String getNameForStatus() { return playerName; }
+
+    @Override
+    public StatusContainer statuses() { return statuses; }
+
+    @Override
+    public double getShield() { return shield; }
+    @Override
+    public void setShield(double shield) { this.shield = Math.max(0, shield); }
+
+
+    public void resetBattleStatuses() {
+        statuses.clearAll();
+        shield = 0;
+    }
+
 
     // 플레이어의 실 능력치(레벨, 성장 반영)
     public int getLevel(){ return level; }
