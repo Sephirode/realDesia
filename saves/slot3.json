@@ -1,0 +1,43 @@
+{
+  "version" : 2,
+  "playerClass" : "전사",
+  "playerName" : "천마김캇트",
+  "chapter" : 3,
+  "act" : 3,
+  "merchantActThisChapter" : 4,
+  "merchantDoneThisChapter" : false,
+  "level" : 20,
+  "exp" : 320.0,
+  "hp" : 388.0,
+  "mp" : 144.0,
+  "shield" : 0.0,
+  "bonusMaxHp" : 15.0,
+  "bonusMaxMp" : 10.0,
+  "bonusAtk" : 1.0,
+  "bonusMagic" : 1.0,
+  "bonusDef" : 1.0,
+  "bonusMdef" : 1.0,
+  "bonusSpd" : 1.0,
+  "gold" : 1452.0,
+  "equipped" : {
+    "HELMET" : "우추의 추진력",
+    "CHEST" : "강철 흉갑",
+    "LEGS" : "강철 각반",
+    "BOOTS" : "강철 부츠",
+    "CLOAK" : "현자의 망토",
+    "RING1" : "힘의 반지",
+    "RING2" : "힘의 반지",
+    "WEAPON1" : "라이트닝 소드",
+    "WEAPON2" : null
+  },
+  "inventory" : {
+    "'보호막' 스크롤" : 1,
+    "체력 포션" : 1,
+    "대형 체력 포션" : 3,
+    "미스릴 아밍 소드" : 1,
+    "미스틱 실드" : 1,
+    "아밍 소드" : 1,
+    "서리 마법봉" : 1,
+    "사슬 흉갑" : 1
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "version" : 1,
+  "playerClass" : "마법사",
+  "playerName" : "asdf",
+  "chapter" : 1,
+  "act" : 1,
+  "level" : 1,
+  "exp" : 0.0,
+  "hp" : 120.0,
+  "mp" : 30.0,
+  "gold" : 200.0,
+  "inventory" : {
+    "'보호막' 스크롤" : 2,
+    "체력 포션" : 3
+  }
+}
